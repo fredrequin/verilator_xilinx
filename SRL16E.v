@@ -1,7 +1,7 @@
 `timescale  1 ps / 1 ps
 //
 // SRL16E primitive for Xilinx FPGAs
-// Compatible with Verilator tool
+// Compatible with Verilator tool (www.veripool.org)
 // Copyright (c) 2019-2020 Frédéric REQUIN
 // License : BSD
 //
