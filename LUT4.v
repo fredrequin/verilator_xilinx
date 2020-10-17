@@ -1,0 +1,21 @@
+`timescale  1 ps / 1 ps
+//
+// LUT4 primitive for Xilinx FPGAs
+// Compatible with Verilator tool (www.veripool.org)
+// Copyright (c) 2019-2020 Frédéric REQUIN
+// License : BSD
+//
+
+module LUT4
+#(
+    parameter [15:0] INIT = 16'h0000
+)
+(
+    input  wire I0, I1, I2, I3,
+    output wire O
+);
+    wire [3:0] _w_idx = { I3, I2, I1, I0 };
+    
+    assign O = INIT[_w_idx];
+
+endmodule
