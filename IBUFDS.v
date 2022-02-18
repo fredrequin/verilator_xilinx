@@ -1,0 +1,29 @@
+`timescale 1 ps / 1 ps
+//
+// IBUFDS primitive for Xilinx FPGAs
+// Compatible with Verilator tool (www.veripool.org)
+// Copyright (c) 2019-2022 Frédéric REQUIN
+// License : BSD
+//
+
+module IBUFDS
+#(
+    parameter CAPACITANCE      = "DONT_CARE",
+    parameter DIFF_TERM        = "FALSE",
+    parameter DQS_BIAS         = "FALSE",
+    parameter IBUF_DELAY_VALUE = "0",
+    parameter IBUF_LOW_PWR     = "TRUE",
+    parameter IFD_DELAY_VALUE  = "AUTO",
+    parameter IOSTANDARD       = "DEFAULT"
+)
+(
+    // Clock input
+    input  I,
+    input  IB,
+    // Clock outputs
+    output O /* verilator clocker */
+);
+
+    assign O = I;
+    
+endmodule
