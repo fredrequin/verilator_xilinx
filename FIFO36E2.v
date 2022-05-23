@@ -100,6 +100,7 @@ module FIFO36E2
     // Local parameters
     // ========================================================================
 
+    /* verilator lint_off WIDTH */
     localparam [0:0] _CLOCK_DOMAINS   = (CLOCK_DOMAINS == "COMMON" ) ? 1'b1 : 1'b0;
     localparam [0:0] _EN_ECC_PIPE     = (EN_ECC_PIPE   == "TRUE"   ) ? 1'b1 : 1'b0;
     localparam [0:0] _EN_ECC_READ     = (EN_ECC_READ   == "TRUE"   ) ? 1'b1 : 1'b0;
@@ -128,20 +129,29 @@ module FIFO36E2
                                       : (WRCOUNT_TYPE == "SIMPLE_DATACOUNT"  ) ? 3'b010
                                       : (WRCOUNT_TYPE == "EXTENDED_DATACOUNT") ? 3'b100
                                       : 3'b000;
+    /* verilator lint_on WIDTH */
+
     // FIFO read address increment
-    localparam [14:0] _RD_ADDR_INC    = (READ_WIDTH ==  4) ? 15'd4
-                                      : (READ_WIDTH ==  9) ? 15'd8
-                                      : (READ_WIDTH == 18) ? 15'd16
-                                      : (READ_WIDTH == 36) ? 15'd32
-                                      : (READ_WIDTH == 72) ? 15'd64
-                                      : 15'd4;
+    localparam        _RD_ADDR_INC    = (READ_WIDTH ==  4) ? 2
+                                      : (READ_WIDTH ==  9) ? 4
+                                      : (READ_WIDTH == 18) ? 8
+                                      : (READ_WIDTH == 36) ? 16
+                                      : (READ_WIDTH == 72) ? 32
+                                      : 2;
     // FIFO write address increment
-    localparam [14:0] _WR_ADDR_INC    = (WRITE_WIDTH ==  4) ? 15'd4
-                                      : (WRITE_WIDTH ==  9) ? 15'd8
-                                      : (WRITE_WIDTH == 18) ? 15'd16
-                                      : (WRITE_WIDTH == 36) ? 15'd32
-                                      : (WRITE_WIDTH == 72) ? 15'd64
-                                      : 15'd4;
+    localparam        _WR_ADDR_INC    = (WRITE_WIDTH ==  4) ? 2
+                                      : (WRITE_WIDTH ==  9) ? 4
+                                      : (WRITE_WIDTH == 18) ? 8
+                                      : (WRITE_WIDTH == 36) ? 16
+                                      : (WRITE_WIDTH == 72) ? 32
+                                      : 2;
+    // FIFO write address mask
+    localparam [13:0] _WR_ADDR_MSK    = (WRITE_WIDTH ==  4) ? 14'b11111111111110
+                                      : (WRITE_WIDTH ==  9) ? 14'b11111111111100
+                                      : (WRITE_WIDTH == 18) ? 14'b11111111111000
+                                      : (WRITE_WIDTH == 36) ? 14'b11111111110000
+                                      : (WRITE_WIDTH == 72) ? 14'b11111111100000
+                                      : 14'b11111111111110;
     // Init value, ECC part (power-up or GSR = 1)
     localparam  [7:0] _INITP          = (READ_WIDTH <= 9)  ? {8{INIT[    8]}}
                                       : (READ_WIDTH == 18) ? {4{INIT[17:16]}}
@@ -151,7 +161,7 @@ module FIFO36E2
     localparam [63:0] _INIT           = (READ_WIDTH <= 9)  ? {8{INIT[ 7: 0]}}
                                       : (READ_WIDTH == 18) ? {4{INIT[15: 0]}}
                                       : (READ_WIDTH == 36) ? {2{INIT[31: 0]}}
-                                      :                      {1{INIT{63: 0]}};
+                                      :                      {1{INIT[63: 0]}};
     // Reset value, ECC part (RST = 1)
     localparam  [7:0] _SRVALP         = (READ_WIDTH <= 9)  ? {8{SRVAL[    8]}}
                                       : (READ_WIDTH == 18) ? {4{SRVAL[17:16]}}
@@ -163,6 +173,20 @@ module FIFO36E2
                                       : (READ_WIDTH == 36) ? {2{SRVAL[31: 0]}}
                                       :                      {1{SRVAL[63: 0]}};
 
+    localparam        pipe_dly        = { 31'b0, _EN_ECC_PIPE }
+                                      + { 31'b0, _REGISTER_MODE[1] }
+                                      + { 31'b0, _FWFT_MODE };
+    
+    localparam wr_adj      = (_RD_ADDR_INC >= _WR_ADDR_INC) ? _RD_ADDR_INC / _WR_ADDR_INC
+                           : 1;
+
+    localparam rdcount_adj = (_RDCOUNT_TYPE[2]) ? pipe_dly
+                           : 0;
+
+    localparam wrcount_adj = (((_WR_ADDR_INC >= _RD_ADDR_INC) && (pipe_dly == 0)) ||
+                              ((_WR_ADDR_INC >= pipe_dly * _RD_ADDR_INC) && (pipe_dly > 0))) ? 1
+                           : ((pipe_dly > 1) || (_FWFT_MODE)) ? pipe_dly * wr_adj
+                           : 0;
     // ========================================================================
     // ECC computation functions
     // ========================================================================
@@ -182,7 +206,7 @@ module FIFO36E2
         fn_ecc[4] = ^{ dp_i[4] & ~encode, d_i & 64'b0000000_1111111111111111000000000000000_111111111111111_0000000_000_0 };
         fn_ecc[5] = ^{ dp_i[5] & ~encode, d_i & 64'b0000000_1111111111111111111111111111111_000000000000000_0000000_000_0 };
         fn_ecc[6] = ^{ dp_i[6] & ~encode, d_i & 64'b1111111_0000000000000000000000000000000_000000000000000_0000000_000_0 };
-        fn_ecc[7] = (encode) ? ^{ fn_ecc[6:0], d_i } : ^{ dp_i[6:0], d_i };
+        fn_ecc[7] = (encode) ? ^{ fn_ecc[6:0], d_i } : ^{ dp_i[7:0], d_i };
     end
     endfunction
 
@@ -453,15 +477,15 @@ endgenerate
     // ECC bits
     reg   [7:0] _r_ecc_reg_p1;
     // FIFO write address
-    reg  [14:0] _r_wr_addr_p0;
-    reg  [14:0] _r_wr_addr_p1;
+    reg  [13:0] _r_wr_addr_p0;
+    reg  [13:0] _r_wr_addr_p1;
     // FIFO next write address
-    wire [14:0] _w_wr_addr_nxt_p0;
+    wire [13:0] _w_wr_addr_nxt_p0;
     // Clock domain crossing
-    reg  [14:0] _r_rd_addr_cc1;
-    reg  [14:0] _r_rd_addr_cc2;
-    reg  [14:0] _r_rd_addr_cc3;
-    wire [14:0] _w_rd_addr_cc;
+    reg  [13:0] _r_rd_addr_cc1;
+    reg  [13:0] _r_rd_addr_cc2;
+    reg  [13:0] _r_rd_addr_cc3;
+    wire [13:0] _w_rd_addr_cc;
 
     initial begin
         _r_ecc_reg_p1 = 8'h00;
@@ -475,18 +499,18 @@ endgenerate
 
         if (_w_GSR) begin
             _r_ecc_reg_p1  <= 8'h00;
-            _r_wr_addr_p0  <= 15'd0;
-            _r_wr_addr_p1  <= 15'd0;
-            _r_rd_addr_cc1 <= 15'd0;
-            _r_rd_addr_cc2 <= 15'd0;
-            _r_rd_addr_cc3 <= 15'd0;
+            _r_wr_addr_p0  <= 14'd0;
+            _r_wr_addr_p1  <= 14'd0;
+            _r_rd_addr_cc1 <= 14'd0;
+            _r_rd_addr_cc2 <= 14'd0;
+            _r_rd_addr_cc3 <= 14'd0;
         end
         else if (WRRSTBUSY) begin
-            _r_wr_addr_p0  <= 15'd0;
-            _r_wr_addr_p1  <= 15'd0;
-            _r_rd_addr_cc1 <= 15'd0;
-            _r_rd_addr_cc2 <= 15'd0;
-            _r_rd_addr_cc3 <= 15'd0;
+            _r_wr_addr_p0  <= 14'd0;
+            _r_wr_addr_p1  <= 14'd0;
+            _r_rd_addr_cc1 <= 14'd0;
+            _r_rd_addr_cc2 <= 14'd0;
+            _r_rd_addr_cc3 <= 14'd0;
         end
         else begin
             if (_w_wr_ena) begin
@@ -516,8 +540,8 @@ endgenerate
                         _r_ecc_reg_p1 <= 8'h00;
                     end
                     // Write to memory
-                    _v_word = _r_wr_addr_p0[14:6];
-                    _v_bit  = _r_wr_addr_p0[5:0];
+                    _v_word = _r_wr_addr_p0[13:5];
+                    _v_bit  = { _r_wr_addr_p0[4:0], 1'b0 };
                     if (WRITE_WIDTH == 4) begin
                         // 4-bit write port
                         _mem_blk  [_v_word][_v_bit+:4]      <= _v_data[3:0];
@@ -542,6 +566,7 @@ endgenerate
                         _mem_blk_p[_v_word]                 <= _v_ecc;
                         _mem_blk  [_v_word]                 <= _v_data;
                     end
+                    wr_b_event <= ~wr_b_event;
                 end
             end
             // Address managament
@@ -558,28 +583,56 @@ endgenerate
         end
     end
 
-    assign _w_wr_addr_nxt_p0 = (_w_wr_ena) ? _r_wr_addr_p0 + _WR_ADDR_INC : _r_wr_addr_p0;
+    assign _w_wr_addr_nxt_p0 = (_w_wr_ena) ? _r_wr_addr_p0 + _WR_ADDR_INC[13:0] : _r_wr_addr_p0;
 
     assign _w_rd_addr_cc     = (_CLOCK_DOMAINS) ? _r_rd_addr_p0 : _r_rd_addr_cc3;
 
     assign ECCPARITY         = _r_ecc_reg_p1;
 
     // ========================================================================
+    // Write count
+    // ========================================================================
+
+    reg  [13:0] _r_wr_count;
+    
+    always @ (posedge _w_WRCLK or posedge _w_GSR) begin
+        reg [13:0] v_wr_count;
+
+        if (_w_GSR || WRRSTBUSY) begin
+            _r_wr_count <= 14'd0;
+        end
+        else begin
+            v_wr_count = (_r_wr_addr_p0 - _w_rd_addr_cc) / _WR_ADDR_INC;
+            if (_WRCOUNT_TYPE[2])
+                _r_wr_count <= v_wr_count + wrcount_adj[13:0];
+            else
+                _r_wr_count <= v_wr_count;
+        end
+    end
+
+    assign WRCOUNT = (_WRCOUNT_TYPE[0]) ? _w_wr_addr_cc / _WR_ADDR_INC
+                   : (|_WRCOUNT_TYPE[2:1]) ? _r_wr_count
+                   : _r_wr_addr_p0 / _WR_ADDR_INC;
+
+    // ========================================================================
     // FIFO read side
     // ========================================================================
     
     // FIFO read enable
-    wire        _w_rd_ena = _w_RDEN & (1'b1) & ~_w_RDRST;
+    wire        _w_rd_ena;
+  assign _w_rd_ena = (_w_RDEN ||
+                        ((fill_lat || fill_reg || fill_ecc) && ~_w_SLEEP_RD)) &&
+                        ~ram_empty && ~_w_RDRST;
     // FIFO read address
-    reg  [14:0] _r_rd_addr_p0;
-    reg  [14:0] _r_rd_addr_p1;
+    reg  [13:0] _r_rd_addr_p0;
+    reg  [13:0] _r_rd_addr_p1;
     // FIFO next read address
-    wire [14:0] _w_rd_addr_nxt_p0;
+    wire [13:0] _w_rd_addr_nxt_p0;
     // Clock domain crossing
-    reg  [14:0] _r_wr_addr_cc1;
-    reg  [14:0] _r_wr_addr_cc2;
-    reg  [14:0] _r_wr_addr_cc3;
-    wire [14:0] _w_wr_addr_cc;
+    reg  [13:0] _r_wr_addr_cc1;
+    reg  [13:0] _r_wr_addr_cc2;
+    reg  [13:0] _r_wr_addr_cc3;
+    wire [13:0] _w_wr_addr_cc;
     // FIFO read data
     reg   [7:0] _r_rd_ecc_p1;
     reg  [63:0] _r_rd_data_p1;
@@ -592,6 +645,8 @@ endgenerate
         _r_rd_data_p1 = _INIT;
         _r_sbiterr_p1 = 1'b0;
         _r_dbiterr_p1 = 1'b0;
+        first_read    = 1'b0;
+        rdcount_en    = 1'b0;
     end
 
     always @ (posedge _w_RDCLK or posedge _w_GSR) begin : P_FIFO_READ_P1
@@ -604,22 +659,22 @@ endgenerate
         reg  [5:0] _v_bit;  // Bit select (0 - 63)
 
         if (_w_GSR) begin
-            _r_rd_addr_p0  <= 15'd0;
-            _r_rd_addr_p1  <= 15'd0;
-            _r_wr_addr_cc1 <= 15'd0;
-            _r_wr_addr_cc2 <= 15'd0;
-            _r_wr_addr_cc3 <= 15'd0;
+            _r_rd_addr_p0  <= 14'd0;
+            _r_rd_addr_p1  <= 14'd0;
+            _r_wr_addr_cc1 <= 14'd0;
+            _r_wr_addr_cc2 <= 14'd0;
+            _r_wr_addr_cc3 <= 14'd0;
             _r_rd_ecc_p1   <= _INITP;
             _r_rd_data_p1  <= _INIT;
-            _r_sbiterr_p1  <= 1'b0;
-            _r_dbiterr_p1  <= 1'b0;
+            first_read     <= 1'b0;
+            rdcount_en     <= 1'b0;
         end
         else if (_w_RDRST) begin
-            _r_rd_addr_p0  <= 15'd0;
-            _r_rd_addr_p1  <= 15'd0;
-            _r_wr_addr_cc1 <= 15'd0;
-            _r_wr_addr_cc2 <= 15'd0;
-            _r_wr_addr_cc3 <= 15'd0;
+            _r_rd_addr_p0  <= 14'd0;
+            _r_rd_addr_p1  <= 14'd0;
+            _r_wr_addr_cc1 <= 14'd0;
+            _r_wr_addr_cc2 <= 14'd0;
+            _r_wr_addr_cc3 <= 14'd0;
             _r_rd_ecc_p1   <= _SRVALP;
             _r_rd_data_p1  <= _SRVAL;
             _r_sbiterr_p1  <= 1'b0;
@@ -634,8 +689,8 @@ endgenerate
                 end
                 else begin
                     // Read from memory
-                    _v_word = _r_rd_addr_p0[14:6];
-                    _v_bit  = _r_rd_addr_p0[5:0];
+                    _v_word = _r_rd_addr_p0[13:5];
+                    _v_bit  = { _r_rd_addr_p0[4:0], 1'b0 };
                     // 4-bit read port
                     if (READ_WIDTH == 4) begin
                         _v_ecc  =   8'b0;
@@ -686,6 +741,8 @@ endgenerate
                         _r_sbiterr_p1 <= 1'b0;
                         _r_dbiterr_p1 <= 1'b0;
                     end
+                    first_read <= 1'b1;
+                    rdcount_en <= 1'b1;
                 end
             end
             else if (_w_RDEN) begin
@@ -705,7 +762,7 @@ endgenerate
         end
     end
 
-    assign _w_rd_addr_nxt_p0 = (_w_rd_ena) ? _r_rd_addr_p0 + _RD_ADDR_INC : _r_rd_addr_p0;
+    assign _w_rd_addr_nxt_p0 = (_w_rd_ena) ? _r_rd_addr_p0 + _RD_ADDR_INC[13:0] : _r_rd_addr_p0;
 
     assign _w_wr_addr_cc     = (_CLOCK_DOMAINS) ? _r_wr_addr_p0 : _r_wr_addr_cc3;
 
@@ -825,5 +882,359 @@ endgenerate
     assign DBITERR = (|_REGISTER_MODE) ? _r_dbiterr_p3
                    : (_EN_ECC_PIPE) ? _r_dbiterr_p2
                    : _r_dbiterr_p1;
+
+    // ========================================================================
+    // Read count
+    // ========================================================================
+
+    reg  [13:0] _r_rd_count;
+    
+    initial begin
+        _r_rd_count = 14'd0;
+    end
+
+generate
+    if ((_WR_ADDR_INC == _RD_ADDR_INC) && (_CLOCK_DOMAINS) && (_RDCOUNT_TYPE[2])) begin : EXT_RD_COUNT
+        always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+
+            if (_w_GSR) begin
+                _r_rd_count <= 14'd0;
+            end
+            else if (_w_RDRST) begin
+                _r_rd_count <= 14'd0;
+            end
+            else begin
+                case ({ EMPTY, _w_RDEN, _w_wr_ena })
+                    3'b000 : _r_rd_count <= _r_rd_count;
+                    3'b001 : _r_rd_count <= _r_rd_count + 14'd1;
+                    3'b010 : _r_rd_count <= _r_rd_count - 14'd1;
+                    3'b011 : _r_rd_count <= _r_rd_count;
+                    3'b100 : _r_rd_count <= _r_rd_count;
+                    3'b101 : _r_rd_count <= _r_rd_count + 14'd1;
+                    3'b110 : _r_rd_count <= _r_rd_count;
+                    3'b111 : _r_rd_count <= _r_rd_count;
+                endcase
+            end
+        end
+    end
+    else begin
+        always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+            reg [13:0] v_rd_count;
+
+            if (_w_GSR) begin
+                _r_rd_count <= 14'd0;
+            end
+            else if (_w_RDRST) begin
+                _r_rd_count <= 14'd0;
+            end
+            else if (rdcount_en) begin
+                v_rd_count = _w_wr_addr_cc - _r_rd_addr_p0;
+                if (v_rd_count == 14'b0) v_rd_count[13] = FULL;
+                v_rd_count = v_rd_count / _RD_ADDR_INC;
+                _r_rd_count <= v_rd_count + rdcount_adj[13:0];
+            end
+        end
+    end
+endgenerate
+
+assign RDCOUNT = (_RDCOUNT_TYPE[0]) ? _w_rd_addr_cc / _RD_ADDR_INC
+               : (|_RDCOUNT_TYPE[2:1]) ? _r_rd_count
+               : _r_rd_addr_p0 / _RD_ADDR_INC;
+
+
+// internal variables, signals, busses
+  wire RDEN_lat;
+  wire WREN_lat;
+  wire RDEN_reg;
+  reg  fill_lat=0;
+  reg  fill_reg=0;
+  wire WREN_ecc;
+  wire RDEN_ecc;
+  reg  fill_ecc=0;
+  wire REGCE_A_int;
+  wire prog_empty;
+  reg prog_empty_cc = 1;
+  reg  ram_full_c = 0;
+  wire ram_empty;
+  reg  ram_empty_i = 1;
+  reg  ram_empty_c = 1;
+  reg  o_lat_empty = 1;
+  reg  o_reg_empty = 1;
+  reg  o_ecc_empty = 1;
+  wire o_stages_empty;
+  wire prog_full;
+  reg  prog_full_reg = 1'b0;
+  reg  r_RDERR;
+  reg  r_WRERR;
+
+  reg first_read = 1'b0;
+  reg rdcount_en = 1'b0;
+
+    reg         wr_b_event = 1'b0;
+
+
+
+
+// full/empty variables
+  wire [13:0] full_count;
+  wire [13:0] next_full_count;
+  wire [13:0] full_count_masked;
+  wire [14:0] m_full;
+  wire [14:0] m_full_raw;
+  wire [14:0] prog_full_val;
+  wire [13:0] prog_empty_val;
+
+  reg ram_full_i;
+  wire ram_one_from_full_i;
+  wire ram_two_from_full_i;
+  wire ram_one_from_full;
+  wire ram_two_from_full;
+  wire ram_one_read_from_not_full;
+
+  wire [13:0] empty_count;
+  wire [13:0] next_empty_count;
+  wire ram_one_read_from_empty_i;
+  wire ram_one_read_from_empty;
+  wire ram_one_write_from_not_empty;
+  wire ram_one_write_from_not_empty_i;
+  
+   assign REGCE_A_int = (_REGISTER_MODE[0]) ? RDEN_reg : REGCE;
+   assign RDEN_lat = _w_RDEN || ((fill_reg || fill_ecc || fill_lat) && ~_w_SLEEP_RD);
+   assign WREN_lat = _w_rd_ena;
+   assign RDEN_ecc = (_w_RDEN || fill_reg) && (_EN_ECC_PIPE);
+   assign WREN_ecc = (_w_RDEN || fill_reg || fill_ecc) && ~o_lat_empty &&
+                       (_EN_ECC_PIPE) && first_read;
+   assign RDEN_reg = _w_RDEN || fill_reg ;
+
+    assign o_stages_empty =
+         (pipe_dly == 0) ? ram_empty :
+         (pipe_dly == 1) ? o_lat_empty :
+         (pipe_dly == 3) ? o_reg_empty : //3 FWFT + ECC + REG
+        ((pipe_dly == 2) && (!_EN_ECC_PIPE)) ?
+          o_reg_empty : // 2 FWFT + REG
+          o_ecc_empty ; // 2 FWFT + ECC // 2 REG + ECC
+
+
+// with any output stage or FWFT fill the ouptut latch
+// when ram not empty and o_latch empty
+   always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST) begin
+         o_lat_empty <= 1'b1;
+         end
+      else if (RDEN_lat) begin
+         o_lat_empty <= ram_empty;
+      end
+      else if (WREN_lat == 1) begin
+         o_lat_empty <= 1'b0;
+         end
+      end
+
+   always @ (negedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST || _w_SLEEP_RD) begin
+         fill_lat  <= 0;
+         end
+      else if (o_lat_empty) begin
+         if (pipe_dly>0) begin
+            fill_lat  <= ~ram_empty;
+         end
+      end
+      else begin
+         fill_lat  <= 0;
+         end
+      end
+
+// FWFT and
+// REGISTERED not ECC_PIPE fill the ouptut register when o_latch not empty.
+// REGISTERED and ECC_PIPE fill the ouptut register when o_ecc not empty.
+// Empty on external read and prev stage also empty
+    always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+    
+        if (_w_GSR) begin
+            o_reg_empty <= 1'b1;
+        end
+        else if (_w_RDRST) begin
+            o_reg_empty <= 1'b1;
+        end
+        else if (RDEN_reg) begin
+            o_reg_empty <= (_EN_ECC_PIPE) ? o_ecc_empty : o_lat_empty;
+        end
+    end
+
+   always @ (negedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST || _w_SLEEP_RD) begin
+          fill_reg <= 0;
+          end
+      else if ((o_lat_empty == 0) && (o_reg_empty == 1) &&
+               (!_EN_ECC_PIPE) &&
+               (pipe_dly==2)) begin
+          fill_reg <= 1;
+          end
+      else if ((o_ecc_empty == 0) && (o_reg_empty == 1) &&
+               (pipe_dly==3)) begin
+          fill_reg <= first_read;
+          end
+      else begin
+          fill_reg <= 0;
+          end
+      end
+
+   always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST) begin
+          o_ecc_empty <= 1;
+         end
+      else if (RDEN_ecc || WREN_ecc) begin
+          o_ecc_empty <= o_lat_empty;
+         end
+      end
+
+   always @ (negedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST || _w_SLEEP_RD) begin
+          fill_ecc <= 0;
+      end
+      else if ((o_lat_empty == 0) && (o_ecc_empty == 1) && first_read &&
+               (_EN_ECC_PIPE & (_REGISTER_MODE[1] | _FWFT_MODE))) begin
+          fill_ecc <= 1;
+      end
+      else begin
+          fill_ecc <= 0;
+      end
+   end
+
+    always @ (posedge _w_RDCLK or posedge _w_GSR) begin : READ_ERROR
+
+        if (_w_GSR)
+            r_RDERR <= 1'b0;
+        else
+            r_RDERR <= _w_RDEN & (EMPTY | _w_RDRST);
+    end
+
+    assign RDERR = r_RDERR;
+
+    always @ (posedge _w_WRCLK or posedge _w_GSR) begin : WRITE_ERROR
+
+        if (_w_GSR)
+            r_WRERR <= 1'b0;
+        else
+            r_WRERR <= _w_WREN & (FULL | WRRSTBUSY);
+    end
+
+    assign WRERR = r_WRERR;
+
+// full flag
+   assign prog_full = ((full_count_masked <= prog_full_val[13:0]) && ((full_count > 14'd0) || FULL));
+   assign prog_full_val = 15'd16384 - (PROG_FULL_THRESH[14:0] * _WR_ADDR_INC) + m_full;
+   assign m_full = (pipe_dly == 0) ? 15'd0 : (((m_full_raw - 15'd1) / _WR_ADDR_INC) + 15'd1) * _WR_ADDR_INC;
+   assign m_full_raw = pipe_dly[14:0] * _RD_ADDR_INC;
+   assign prog_empty_val = (PROG_EMPTY_THRESH[13:0] - pipe_dly[13:0] + 14'd1) * _RD_ADDR_INC;
+
+   assign full_count_masked = full_count & _WR_ADDR_MSK;
+   assign full_count        = _w_rd_addr_cc - _r_wr_addr_p0;
+   assign next_full_count   = _w_rd_addr_nxt_p0 - _w_wr_addr_nxt_p0;
+
+   assign FULL = (_CLOCK_DOMAINS) ? ram_full_c : ram_full_i;
+// ram_full independent clocks is one_from_full common clocks
+   assign ram_one_from_full_i = ((full_count < 2*_WR_ADDR_INC) && (full_count > 14'd0));
+   assign ram_two_from_full_i = ((full_count < 3*_WR_ADDR_INC) && (full_count > 14'd0));
+   assign ram_one_from_full = (next_full_count < _WR_ADDR_INC) && ~ram_full_c;
+   assign ram_two_from_full = (next_full_count < 2*_WR_ADDR_INC) && ~ram_full_c;
+// when full common clocks, next read makes it not full
+//   assign ram_one_read_from_not_full = ((full_count + _RD_ADDR_INC >= _WR_ADDR_INC) && ram_full_c);
+   assign ram_one_read_from_not_full = (next_full_count >= _WR_ADDR_INC) && ram_full_c;
+
+   always @ (posedge _w_WRCLK or posedge _w_GSR) begin
+      if (_w_GSR || WRRSTBUSY) begin
+         ram_full_c <= 1'b0;
+         end
+      else if (_w_wr_ena &&
+               (_w_rd_ena && (_RD_ADDR_INC < _WR_ADDR_INC)) &&
+               ram_one_from_full) begin
+         ram_full_c <= 1'b1;
+         end
+      else if (_w_wr_ena && ~_w_rd_ena && ram_one_from_full) begin
+         ram_full_c <= 1'b1;
+         end
+      else if (_w_rd_ena && ram_one_read_from_not_full) begin
+         ram_full_c <= 1'b0;
+         end
+      else begin
+         ram_full_c <= ram_full_c;
+         end
+      end
+
+   always @ (posedge _w_WRCLK or posedge _w_GSR) begin
+      if (_w_GSR || WRRSTBUSY) begin
+         ram_full_i <= 1'b0;
+         end
+      else if (_w_wr_ena && ram_two_from_full_i && ~ram_full_i) begin
+         ram_full_i <= 1'b1;
+         end
+      else if (~ram_one_from_full_i) begin
+         ram_full_i <= 1'b0;
+         end
+      else begin
+         ram_full_i <= ram_full_i;
+         end
+      end
+
+   assign PROGFULL = prog_full_reg;
+   always @ (posedge _w_WRCLK or posedge _w_GSR) begin
+      if (_w_GSR || WRRSTBUSY) begin
+         prog_full_reg <= 1'b0;
+         end
+      else begin
+         prog_full_reg <= prog_full;
+         end
+      end
+
+// empty flag
+   assign empty_count      = _w_wr_addr_cc - _r_rd_addr_p0;
+   assign next_empty_count = _w_wr_addr_nxt_p0 - _w_rd_addr_nxt_p0;
+   assign EMPTY = o_stages_empty;
+   assign ram_empty = (_CLOCK_DOMAINS) ? ram_empty_c : ram_empty_i;
+   assign ram_one_read_from_empty_i = (empty_count < 2*_RD_ADDR_INC) && (empty_count >= _RD_ADDR_INC) && ~ram_empty;
+   assign ram_one_read_from_empty = (next_empty_count < _RD_ADDR_INC) && ~ram_empty;
+   assign ram_one_write_from_not_empty = (next_empty_count >= _RD_ADDR_INC) && ram_empty;
+   assign ram_one_write_from_not_empty_i = (_RD_ADDR_INC < _WR_ADDR_INC) ? EMPTY : ((empty_count + _WR_ADDR_INC) >= _RD_ADDR_INC);
+   assign prog_empty = ((empty_count < prog_empty_val) || (_CLOCK_DOMAINS && ram_empty)) && (~FULL | ~_CLOCK_DOMAINS);
+
+   always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST)
+         ram_empty_c <= 1'b1;
+// RD only makes empty
+      else if (~_w_wr_ena &&
+               _w_rd_ena  &&
+               (ram_one_read_from_empty || ram_empty_c))
+         ram_empty_c <= 1'b1;
+// RD and WR when one read from empty and RD more than WR makes empty
+      else if (_w_wr_ena &&
+              (_w_rd_ena && (_RD_ADDR_INC > _WR_ADDR_INC)) &&
+              (ram_one_read_from_empty || ram_empty_c))
+         ram_empty_c <= 1'b1;
+// CR701309 CC WR when empty always makes not empty. simultaneous RD gets ERR
+      else if ( _w_wr_ena && (ram_one_write_from_not_empty && ram_empty_c))
+         ram_empty_c <= 1'b0;
+      else
+         ram_empty_c <= ram_empty_c;
+      end
+
+   always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST)
+         ram_empty_i <= 1'b1;
+      else if (_w_rd_ena && ram_one_read_from_empty_i) // _w_RDEN ?
+         ram_empty_i <= 1'b1;
+      else if (empty_count < _RD_ADDR_INC)
+         ram_empty_i <= 1'b1;
+      else
+         ram_empty_i <= 1'b0;
+      end
+
+//   assign PROGEMPTY = (_CLOCK_DOMAINS) ? prog_empty_cc : prog_empty;
+   assign PROGEMPTY = prog_empty_cc;
+   always @ (posedge _w_RDCLK or posedge _w_GSR) begin
+      if (_w_GSR || _w_RDRST)
+         prog_empty_cc <= 1'b1;
+      else
+         prog_empty_cc <= prog_empty;
+      end
 
 endmodule
