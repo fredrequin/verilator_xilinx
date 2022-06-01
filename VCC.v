@@ -1,8 +1,11 @@
-`timescale  1 ps / 1 ps
+`ifdef verilator3
+`else
+`timescale 1 ps / 1 ps
+`endif
 //
 // VCC primitive for Xilinx FPGAs
 // Compatible with Verilator tool (www.veripool.org)
-// Copyright (c) 2019-2020 Frédéric REQUIN
+// Copyright (c) 2019-2022 Frédéric REQUIN
 // License : BSD
 //
 

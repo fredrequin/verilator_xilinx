@@ -2,6 +2,12 @@
 `else
 `timescale 1 ps / 1 ps
 `endif
+//
+// FIFO36E2 primitive for Xilinx FPGAs
+// Compatible with Verilator tool (www.veripool.org)
+// Copyright (c) 2019-2022 Frédéric REQUIN
+// License : BSD
+//
 
 module FIFO36E2
 #(

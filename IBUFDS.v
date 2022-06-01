@@ -1,4 +1,7 @@
+`ifdef verilator3
+`else
 `timescale 1 ps / 1 ps
+`endif
 //
 // IBUFDS primitive for Xilinx FPGAs
 // Compatible with Verilator tool (www.veripool.org)
