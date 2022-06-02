@@ -19,10 +19,10 @@ module BUFGCE_DIV
     parameter   [0:0] IS_I_INVERTED   = 1'b0
 )
 (
-    input  I,
-    input  CE,
-    input  CLR,
-    output O /* verilator clocker */
+    input      I,
+    input      CE,
+    input      CLR,
+    output reg O /* verilator clocker */
 );
 
     wire       w_CLK = I ^ IS_I_INVERTED;
