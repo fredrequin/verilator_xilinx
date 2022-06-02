@@ -10,6 +10,10 @@
 //
 
 module SRL32E
+#(
+    parameter [31:0] INIT = 32'h0,
+    parameter  [0:0] IS_CLK_INVERTED = 1'b0
+)
 (
     // Clock
     input  wire       CLK,
@@ -22,8 +26,6 @@ module SRL32E
     // Data out
     output wire       Q
 );
-    parameter [31:0] INIT = 32'h00000000;
-    parameter  [0:0] IS_CLK_INVERTED = 1'b0;
 
     // 32-bit shift register
     reg [31:0] _r_srl;
@@ -36,14 +38,14 @@ module SRL32E
     // Shifter logic
     generate
         if (IS_CLK_INVERTED) begin : GEN_CLK_NEG
-            always @(negedge CLK) begin
+            always @(negedge CLK) begin : SHIFTER_32B
                 if (CE) begin
                     _r_srl <= { _r_srl[30:0], D };
                 end
             end
         end
         else begin : GEN_CLK_POS
-            always @(posedge CLK) begin
+            always @(posedge CLK) begin : SHIFTER_32B
                 if (CE) begin
                     _r_srl <= { _r_srl[30:0], D };
                 end

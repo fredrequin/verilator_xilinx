@@ -10,6 +10,10 @@
 //
 
 module SRLC16E
+#(
+    parameter [15:0] INIT = 16'h0,
+    parameter  [0:0] IS_CLK_INVERTED = 1'b0
+)
 (
     // Clock
     input  wire       CLK,
@@ -24,8 +28,6 @@ module SRLC16E
     // Cascading data out
     output wire       Q15
 );
-    parameter [15:0] INIT = 16'h0000;
-    parameter  [0:0] IS_CLK_INVERTED = 1'b0;
 
     // 32-bit shift register
     reg  [15:0] _r_srl;
@@ -41,14 +43,16 @@ module SRLC16E
     // Shifter logic
     generate
         if (IS_CLK_INVERTED) begin : GEN_CLK_NEG
-            always @(negedge CLK) begin
+            always @(negedge CLK) begin : SHIFTER_16B
+            
                 if (CE) begin
                     _r_srl <= { _r_srl[14:0], D };
                 end
             end
         end
         else begin : GEN_CLK_POS
-            always @(posedge CLK) begin
+            always @(posedge CLK) begin : SHIFTER_16B
+            
                 if (CE) begin
                     _r_srl <= { _r_srl[14:0], D };
                 end

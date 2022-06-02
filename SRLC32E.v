@@ -10,6 +10,10 @@
 //
 
 module SRLC32E
+#(
+    parameter [31:0] INIT = 32'h0,
+    parameter  [0:0] IS_CLK_INVERTED = 1'b0
+)
 (
     // Clock
     input  wire       CLK,
@@ -24,7 +28,6 @@ module SRLC32E
     // Cascading data out
     output wire       Q31
 );
-    parameter [31:0] INIT = 32'h00000000;
     
     // 32-bit shift register
     reg  [31:0] _r_srl;
@@ -35,12 +38,24 @@ module SRLC32E
     end
     
     // Shifter logic
-    always @(posedge CLK) begin : SHIFTER_32B
-    
-        if (CE) begin
-            _r_srl <= { _r_srl[30:0], D };
+    generate
+        if (IS_CLK_INVERTED) begin : GEN_CLK_NEG
+            always @(negedge CLK) begin : SHIFTER_32B
+            
+                if (CE) begin
+                    _r_srl <= { _r_srl[30:0], D };
+                end
+            end
         end
-    end
+        else begin : GEN_CLK_POS
+            always @(posedge CLK) begin : SHIFTER_32B
+            
+                if (CE) begin
+                    _r_srl <= { _r_srl[30:0], D };
+                end
+            end
+        end
+    endgenerate
     
     // Data out
     assign Q   = _r_srl[A];
