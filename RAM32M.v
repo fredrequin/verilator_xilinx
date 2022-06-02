@@ -59,9 +59,9 @@ module RAM32M
             always @(negedge WCLK) begin : MEM_WRITE
             
                 if (WE) begin
-                    _r_mem_a[{ ADDRA, 1'b0 } +: 2] <= DIA;
-                    _r_mem_b[{ ADDRB, 1'b0 } +: 2] <= DIB;
-                    _r_mem_c[{ ADDRC, 1'b0 } +: 2] <= DIC;
+                    _r_mem_a[{ ADDRD, 1'b0 } +: 2] <= DIA;
+                    _r_mem_b[{ ADDRD, 1'b0 } +: 2] <= DIB;
+                    _r_mem_c[{ ADDRD, 1'b0 } +: 2] <= DIC;
                     _r_mem_d[{ ADDRD, 1'b0 } +: 2] <= DID;
                 end
             end
@@ -70,9 +70,9 @@ module RAM32M
             always @(posedge WCLK) begin : MEM_WRITE
             
                 if (WE) begin
-                    _r_mem_a[{ ADDRA, 1'b0 } +: 2] <= DIA;
-                    _r_mem_b[{ ADDRB, 1'b0 } +: 2] <= DIB;
-                    _r_mem_c[{ ADDRC, 1'b0 } +: 2] <= DIC;
+                    _r_mem_a[{ ADDRD, 1'b0 } +: 2] <= DIA;
+                    _r_mem_b[{ ADDRD, 1'b0 } +: 2] <= DIB;
+                    _r_mem_c[{ ADDRD, 1'b0 } +: 2] <= DIC;
                     _r_mem_d[{ ADDRD, 1'b0 } +: 2] <= DID;
                 end
             end

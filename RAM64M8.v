@@ -87,13 +87,13 @@ module RAM64M8
             always @(negedge WCLK) begin : MEM_WRITE
             
                 if (WE) begin
-                    _r_mem_a[ADDRA] <= DIA;
-                    _r_mem_b[ADDRB] <= DIB;
-                    _r_mem_c[ADDRC] <= DIC;
-                    _r_mem_d[ADDRD] <= DID;
-                    _r_mem_e[ADDRE] <= DIE;
-                    _r_mem_f[ADDRF] <= DIF;
-                    _r_mem_g[ADDRG] <= DIG;
+                    _r_mem_a[ADDRH] <= DIA;
+                    _r_mem_b[ADDRH] <= DIB;
+                    _r_mem_c[ADDRH] <= DIC;
+                    _r_mem_d[ADDRH] <= DID;
+                    _r_mem_e[ADDRH] <= DIE;
+                    _r_mem_f[ADDRH] <= DIF;
+                    _r_mem_g[ADDRH] <= DIG;
                     _r_mem_h[ADDRH] <= DIH;
                 end
             end
@@ -102,13 +102,13 @@ module RAM64M8
             always @(posedge WCLK) begin : MEM_WRITE
             
                 if (WE) begin
-                    _r_mem_a[ADDRA] <= DIA;
-                    _r_mem_b[ADDRB] <= DIB;
-                    _r_mem_c[ADDRC] <= DIC;
-                    _r_mem_d[ADDRD] <= DID;
-                    _r_mem_e[ADDRE] <= DIE;
-                    _r_mem_f[ADDRF] <= DIF;
-                    _r_mem_g[ADDRG] <= DIG;
+                    _r_mem_a[ADDRH] <= DIA;
+                    _r_mem_b[ADDRH] <= DIB;
+                    _r_mem_c[ADDRH] <= DIC;
+                    _r_mem_d[ADDRH] <= DID;
+                    _r_mem_e[ADDRH] <= DIE;
+                    _r_mem_f[ADDRH] <= DIF;
+                    _r_mem_g[ADDRH] <= DIG;
                     _r_mem_h[ADDRH] <= DIH;
                 end
             end

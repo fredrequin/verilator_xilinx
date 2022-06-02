@@ -87,13 +87,13 @@ module RAM32M16
             always @(negedge WCLK) begin : MEM_WRITE
             
                 if (WE) begin
-                    _r_mem_a[{ ADDRA, 1'b0 } +: 2] <= DIA;
-                    _r_mem_b[{ ADDRB, 1'b0 } +: 2] <= DIB;
-                    _r_mem_c[{ ADDRC, 1'b0 } +: 2] <= DIC;
-                    _r_mem_d[{ ADDRD, 1'b0 } +: 2] <= DID;
-                    _r_mem_e[{ ADDRE, 1'b0 } +: 2] <= DIE;
-                    _r_mem_f[{ ADDRF, 1'b0 } +: 2] <= DIF;
-                    _r_mem_g[{ ADDRG, 1'b0 } +: 2] <= DIG;
+                    _r_mem_a[{ ADDRH, 1'b0 } +: 2] <= DIA;
+                    _r_mem_b[{ ADDRH, 1'b0 } +: 2] <= DIB;
+                    _r_mem_c[{ ADDRH, 1'b0 } +: 2] <= DIC;
+                    _r_mem_d[{ ADDRH, 1'b0 } +: 2] <= DID;
+                    _r_mem_e[{ ADDRH, 1'b0 } +: 2] <= DIE;
+                    _r_mem_f[{ ADDRH, 1'b0 } +: 2] <= DIF;
+                    _r_mem_g[{ ADDRH, 1'b0 } +: 2] <= DIG;
                     _r_mem_h[{ ADDRH, 1'b0 } +: 2] <= DIH;
                 end
             end
@@ -102,13 +102,13 @@ module RAM32M16
             always @(posedge WCLK) begin : MEM_WRITE
             
                 if (WE) begin
-                    _r_mem_a[{ ADDRA, 1'b0 } +: 2] <= DIA;
-                    _r_mem_b[{ ADDRB, 1'b0 } +: 2] <= DIB;
-                    _r_mem_c[{ ADDRC, 1'b0 } +: 2] <= DIC;
-                    _r_mem_d[{ ADDRD, 1'b0 } +: 2] <= DID;
-                    _r_mem_e[{ ADDRE, 1'b0 } +: 2] <= DIE;
-                    _r_mem_f[{ ADDRF, 1'b0 } +: 2] <= DIF;
-                    _r_mem_g[{ ADDRG, 1'b0 } +: 2] <= DIG;
+                    _r_mem_a[{ ADDRH, 1'b0 } +: 2] <= DIA;
+                    _r_mem_b[{ ADDRH, 1'b0 } +: 2] <= DIB;
+                    _r_mem_c[{ ADDRH, 1'b0 } +: 2] <= DIC;
+                    _r_mem_d[{ ADDRH, 1'b0 } +: 2] <= DID;
+                    _r_mem_e[{ ADDRH, 1'b0 } +: 2] <= DIE;
+                    _r_mem_f[{ ADDRH, 1'b0 } +: 2] <= DIF;
+                    _r_mem_g[{ ADDRH, 1'b0 } +: 2] <= DIG;
                     _r_mem_h[{ ADDRH, 1'b0 } +: 2] <= DIH;
                 end
             end

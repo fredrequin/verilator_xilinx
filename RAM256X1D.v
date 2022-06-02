@@ -11,7 +11,8 @@
 
 module RAM256X1D
 #(
-    parameter [255:0] INIT = 256'h0
+    parameter [255:0] INIT = 256'h0,
+    parameter   [0:0] IS_WCLK_INVERTED = 1'b0
 )
 (
     // Write clock
@@ -37,12 +38,24 @@ module RAM256X1D
     end
     
     // Synchronous memory write
-    always @(posedge WCLK) begin : MEM_WRITE
-    
-        if (WE) begin
-            _r_mem[A] <= D;
+    generate
+        if (IS_WCLK_INVERTED) begin : GEN_WCLK_NEG
+            always @(negedge WCLK) begin : MEM_WRITE
+            
+                if (WE) begin
+                    _r_mem[A] <= D;
+                end
+            end
         end
-    end
+        else begin : GEN_WCLK_POS
+            always @(posedge WCLK) begin : MEM_WRITE
+            
+                if (WE) begin
+                    _r_mem[A] <= D;
+                end
+            end
+        end
+    endgenerate
     
     // Asynchronous memory read
     assign SPO = _r_mem[A];

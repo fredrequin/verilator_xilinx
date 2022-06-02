@@ -54,15 +54,30 @@ module RAM64M
     end
     
     // Synchronous memory write
-    always @(posedge WCLK) begin : MEM_WRITE
-    
-        if (WE) begin
-            _r_mem_a[ADDRA] <= DIA;
-            _r_mem_b[ADDRB] <= DIB;
-            _r_mem_c[ADDRC] <= DIC;
-            _r_mem_d[ADDRD] <= DID;
+    generate
+        if (IS_WCLK_INVERTED) begin : GEN_WCLK_NEG
+            always @(negedge WCLK) begin : MEM_WRITE
+            
+                if (WE) begin
+                    _r_mem_a[ADDRD] <= DIA;
+                    _r_mem_b[ADDRD] <= DIB;
+                    _r_mem_c[ADDRD] <= DIC;
+                    _r_mem_d[ADDRD] <= DID;
+                end
+            end
         end
-    end
+        else begin : GEN_WCLK_POS
+            always @(posedge WCLK) begin : MEM_WRITE
+            
+                if (WE) begin
+                    _r_mem_a[ADDRD] <= DIA;
+                    _r_mem_b[ADDRD] <= DIB;
+                    _r_mem_c[ADDRD] <= DIC;
+                    _r_mem_d[ADDRD] <= DID;
+                end
+            end
+        end
+    endgenerate
     
     // Asynchronous memory read
     assign DOA = _r_mem_a[ADDRA];
