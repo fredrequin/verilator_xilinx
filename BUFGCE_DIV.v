@@ -9,6 +9,8 @@
 // License : BSD
 //
 
+/* verilator lint_off WIDTH */
+/* verilator lint_off SYNCASYNCNET */
 module BUFGCE_DIV
 #(
     parameter integer BUFGCE_DIVIDE   = 1,
@@ -94,3 +96,5 @@ module BUFGCE_DIV
     end
 
 endmodule
+/* verilator lint_on WIDTH */
+/* verilator lint_on SYNCASYNCNET */
