@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module CFGLUT5
 #(
     parameter [31:0] INIT            = 32'h00000000,
@@ -61,3 +62,4 @@ module CFGLUT5
     assign CDO = _r_sreg[31];
 
 endmodule
+/* verilator coverage_on */

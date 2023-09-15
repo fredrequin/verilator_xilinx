@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module RAM32M16
 #(
     parameter  [63:0] INIT_A           = 64'h0,
@@ -126,3 +127,4 @@ module RAM32M16
     assign DOH = _r_mem_h[{ ADDRH, 1'b0 } +: 2];
     
 endmodule
+/* verilator coverage_on */

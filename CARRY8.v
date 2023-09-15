@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module CARRY8
 #(
     parameter CARRY_TYPE = "SINGLE_CY8" // "SINGLE_CY8", "DUAL_CY4"
@@ -42,3 +43,4 @@ module CARRY8
     assign O    =  S ^ { _w_CO6, _w_CO5, _w_CO4, _w_CI, _w_CO2, _w_CO1, _w_CO0, CI };
 
 endmodule
+/* verilator coverage_on */

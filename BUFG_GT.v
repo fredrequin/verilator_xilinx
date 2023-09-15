@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module BUFG_GT
 (
     input       I,
@@ -18,7 +19,7 @@ module BUFG_GT
     input       CLR,
     input       CLRMASK,
     
-    output  reg O /* verilator clocker */
+    output      O /* verilator clocker */
 );
 
     reg  [1:0] r_CE_cdc;
@@ -29,6 +30,10 @@ module BUFG_GT
     wire       w_CLR_msk;
     
     reg  [2:0] r_clk_div;
+    
+    /* verilator lint_off MULTIDRIVEN */
+    reg        r_O;
+    /* verilator lint_on MULTIDRIVEN */
    
     initial begin
         r_CE_cdc  = 2'b00;
@@ -81,14 +86,24 @@ module BUFG_GT
         end
     end
     
-    always @(*) begin
+    always @(posedge I) begin
     
         casez (DIV)
-            3'b000 : O = I & r_CE_msk;
-            3'b001 : O = r_clk_div[0];
-            3'b01? : O = r_clk_div[1];
-            3'b1?? : O = r_clk_div[2];
+            3'b000 : r_O <= r_CE_msk;
+            3'b001 : r_O <= r_clk_div[0];
+            3'b01? : r_O <= r_clk_div[1];
+            3'b1?? : r_O <= r_clk_div[2];
         endcase
     end
 
+    always @(negedge I) begin
+    
+        if (DIV == 3'b000) begin
+            r_O <= 1'b0;
+        end
+    end
+    
+    assign O = r_O;
+
 endmodule
+/* verilator coverage_on */

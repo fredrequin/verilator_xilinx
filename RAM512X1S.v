@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module RAM512X1S
 #(
     parameter [511:0] INIT = 512'h0,
@@ -58,3 +59,4 @@ module RAM512X1S
     assign O = _r_mem[A];
 
 endmodule
+/* verilator coverage_on */

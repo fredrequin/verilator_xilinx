@@ -10,6 +10,7 @@
 //
 
 /* verilator lint_off UNUSED */
+/* verilator coverage_off */
 module RAMB8BWER
 #(
     // Memory initialization
@@ -811,3 +812,4 @@ module RAMB8BWER
     
 endmodule
 /* verilator lint_on UNUSED */
+/* verilator coverage_on */

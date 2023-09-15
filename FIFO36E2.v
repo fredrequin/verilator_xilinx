@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module FIFO36E2
 #(
     // "NONE", "FIRST", "LAST", "MIDDLE", "PARALLEL"
@@ -1244,3 +1245,4 @@ assign RDCOUNT = (_RDCOUNT_TYPE[0]) ? _w_rd_addr_cc / _RD_ADDR_INC
       end
 
 endmodule
+/* verilator coverage_on */

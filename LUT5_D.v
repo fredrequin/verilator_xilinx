@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module LUT5_D
 #(
     parameter [31:0] INIT = 32'h00000000
@@ -25,3 +26,4 @@ module LUT5_D
     assign O  = INIT[_w_idx];
 
 endmodule
+/* verilator coverage_on */

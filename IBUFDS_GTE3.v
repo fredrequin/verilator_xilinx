@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module IBUFDS_GTE3
 #(
     parameter [0:0] REFCLK_EN_TX_PATH  = 1'b0,
@@ -47,3 +48,4 @@ module IBUFDS_GTE3
     assign O = (REFCLK_EN_TX_PATH | CEB) ? 1'b0 : I;
 
 endmodule
+/* verilator coverage_on */

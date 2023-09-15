@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module SRL32E
 #(
     parameter [31:0] INIT = 32'h0,
@@ -57,3 +58,4 @@ module SRL32E
     assign Q   = _r_srl[A];
     
 endmodule
+/* verilator coverage_on */

@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module VCC
 (
     output wire P
@@ -17,3 +18,4 @@ module VCC
     assign P = 1'b1;
 
 endmodule
+/* verilator coverage_on */

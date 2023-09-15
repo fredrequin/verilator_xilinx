@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module RAM32X1S
 #(
     parameter [31:0] INIT = 32'h0,
@@ -64,3 +65,4 @@ module RAM32X1S
     assign O = _r_mem[_w_A];
 
 endmodule
+/* verilator coverage_on */

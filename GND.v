@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module GND
 (
     output wire G
@@ -17,3 +18,4 @@ module GND
     assign G = 1'b0;
 
 endmodule
+/* verilator coverage_on */

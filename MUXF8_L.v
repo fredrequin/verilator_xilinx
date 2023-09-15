@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module MUXF8_L
 (
     input  wire I0, I1,
@@ -19,3 +20,4 @@ module MUXF8_L
     assign LO = (S) ? I1 : I0;
 
 endmodule
+/* verilator coverage_on */

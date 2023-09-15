@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module RAM128X1S
 #(
     parameter [127:0] INIT = 128'h0,
@@ -66,3 +67,4 @@ module RAM128X1S
     assign O = _r_mem[_w_A];
 
 endmodule
+/* verilator coverage_on */

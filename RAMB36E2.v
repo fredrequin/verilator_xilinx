@@ -10,6 +10,7 @@
 //
 
 /* verilator lint_off UNUSED */
+/* verilator coverage_off */
 module RAMB36E2
 #(
     // Cascading mode
@@ -1465,3 +1466,4 @@ module RAMB36E2
 
 endmodule
 /* verilator lint_on UNUSED */
+/* verilator coverage_on */

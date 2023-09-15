@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module FDPE
 #(
     parameter [0:0] IS_C_INVERTED   = 1'b0,
@@ -65,3 +66,4 @@ module FDPE
     assign Q = _r_Q;
 
 endmodule
+/* verilator coverage_on */

@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module IBUFDS
 #(
     parameter CAPACITANCE      = "DONT_CARE",
@@ -30,3 +31,4 @@ module IBUFDS
     assign O = I;
     
 endmodule
+/* verilator coverage_on */

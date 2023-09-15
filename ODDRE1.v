@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module ODDRE1
 #(
     parameter [0:0] IS_C_INVERTED  = 1'b0,
@@ -81,3 +82,4 @@ endgenerate
     assign Q = r_Q_p ^ r_Q_n;
  
 endmodule
+/* verilator coverage_on */

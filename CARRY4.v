@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module CARRY4
 (
     // Carry cascade input
@@ -34,3 +35,4 @@ module CARRY4
     assign O    =  S ^ { _w_CO2, _w_CO1, _w_CO0, CI | CYINIT };
 
 endmodule
+/* verilator coverage_on */

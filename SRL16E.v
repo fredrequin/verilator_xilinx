@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module SRL16E
 #(
     parameter [15:0] INIT = 16'h0,
@@ -61,3 +62,4 @@ module SRL16E
     assign Q = _r_srl[_w_addr];
 
 endmodule
+/* verilator coverage_on */

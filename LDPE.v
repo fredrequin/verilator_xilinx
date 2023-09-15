@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module LDPE
 #(
     parameter INIT = 1'b0
@@ -44,3 +45,4 @@ module LDPE
     assign Q = _r_Q;
 
 endmodule
+/* verilator coverage_on */

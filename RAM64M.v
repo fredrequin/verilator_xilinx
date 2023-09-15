@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module RAM64M
 #(
     parameter  [63:0] INIT_A           = 64'h0,
@@ -86,3 +87,4 @@ module RAM64M
     assign DOD = _r_mem_d[ADDRD];
 
 endmodule
+/* verilator coverage_on */

@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/*verilator coverage_off*/
 module BUFG
 (
     input  I,
@@ -18,3 +19,4 @@ module BUFG
     assign O = I;
 
 endmodule
+/*verilator coverage_on*/

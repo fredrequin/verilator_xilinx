@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module LUT1
 #(
     parameter [1:0] INIT = 2'b00
@@ -20,3 +21,4 @@ module LUT1
     assign O = INIT[I0];
 
 endmodule
+/* verilator coverage_on */

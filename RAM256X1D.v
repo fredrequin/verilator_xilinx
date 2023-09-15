@@ -9,6 +9,7 @@
 // License : BSD
 //
 
+/* verilator coverage_off */
 module RAM256X1D
 #(
     parameter [255:0] INIT = 256'h0,
@@ -62,3 +63,4 @@ module RAM256X1D
     assign DPO = _r_mem[DPRA];
 
 endmodule
+/* verilator coverage_on */
