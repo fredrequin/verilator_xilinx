@@ -27,13 +27,20 @@ module FDRE
     // Data in
     input  wire D,
     // Data out
+`ifdef FAST_IQ
     output wire Q
+`else
+    output wire Q /* verilator public_flat_rd */
+`endif
 );
+`ifdef SCOPE_IQ
+    localparam cell_kind /* verilator public_flat_rd */ = 0;
+`endif
     reg _r_Q;
 
     wire _w_D = D ^ IS_D_INVERTED;
     wire _w_R = R ^ IS_R_INVERTED;
-    
+
     initial begin : INIT_STATE
         _r_Q = INIT[0];
     end
@@ -41,7 +48,7 @@ module FDRE
     generate
         if (IS_C_INVERTED) begin : GEN_CLK_NEG
             always @(negedge C) begin
-            
+
                 if (_w_R) begin
                     _r_Q <= 1'b0;
                 end
@@ -52,7 +59,7 @@ module FDRE
         end
         else begin : GEN_CLK_POS
             always @(posedge C) begin
-            
+
                 if (_w_R) begin
                     _r_Q <= 1'b0;
                 end
@@ -62,8 +69,14 @@ module FDRE
             end
         end
     endgenerate
-    
+
+`ifdef FAST_IQ
+    reg Q_f /* verilator public_flat_rw */ = 1'b0;
+    reg Q_v /* verilator public_flat_rw */ = 1'b0;
+    assign Q = Q_f ? Q_v : _r_Q;
+`else
     assign Q = _r_Q;
+`endif
 
 endmodule
 /* verilator coverage_on */

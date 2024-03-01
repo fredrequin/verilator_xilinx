@@ -23,16 +23,23 @@ module ODDRE1
     input  D1,
     input  D2,
     input  SR,
+`ifdef FAST_IQ
     output Q
+`else
+    output Q /* verilator public_flat_rd */
+`endif
 );
-  
+`ifdef SCOPE_IQ
+    localparam cell_kind /* verilator public_flat_rd */ = 0;
+`endif
+
     wire       w_CLK = C  ^ IS_C_INVERTED;
     wire       w_D1  = D1 ^ IS_D1_INVERTED;
     wire       w_D2  = D2 ^ IS_D2_INVERTED;
     wire       w_SR;
-    
+
     reg  [2:0] r_SR_cdc;
-    
+
     reg        r_Q_p;
     reg        r_D2_p;
     reg        r_Q_n;
@@ -41,24 +48,24 @@ generate
     /* verilator lint_off WIDTH */
     if ((SIM_DEVICE == "EVEREST") || (SIM_DEVICE == "EVEREST_ES1") || (SIM_DEVICE == "EVEREST_ES2")) begin
     /* verilator lint_on WIDTH */
-    
+
         assign w_SR = SR;
-        
+
     end
     else begin
 
         always @(posedge w_CLK) begin
-        
+
             r_SR_cdc <= { r_SR_cdc[1:0], SR };
         end
-    
+
         assign w_SR = |{ SR, r_SR_cdc };
-        
+
     end
 endgenerate
 
     always @(posedge w_CLK) begin
-    
+
         if (w_SR) begin
             r_Q_p  <= SRVAL ^ r_Q_n;
             r_D2_p <= SRVAL;
@@ -68,9 +75,9 @@ endgenerate
             r_D2_p <= w_D2;
         end
     end
-    
+
     always @(negedge w_CLK) begin
-    
+
         if (w_SR) begin
             r_Q_n <= SRVAL ^ r_Q_p;
         end
@@ -78,8 +85,14 @@ endgenerate
             r_Q_n <= r_D2_p ^ r_Q_p;
         end
     end
-    
+
+`ifdef FAST_IQ
+    reg Q_f /* verilator public_flat_rw */ = 1'b0;
+    reg Q_v /* verilator public_flat_rw */ = 1'b0;
+    assign Q = Q_f ? Q_v : r_Q_p ^ r_Q_n;
+`else
     assign Q = r_Q_p ^ r_Q_n;
- 
+`endif
+
 endmodule
 /* verilator coverage_on */
